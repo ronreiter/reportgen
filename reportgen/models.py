@@ -28,6 +28,7 @@ class SectionConfig(BaseModel):
 
 class ReportConfig(BaseModel):
     sections: List[SectionConfig]
+    title: Optional[str] = None
     orientation: Literal["portrait", "landscape"] = "portrait"
     paper_size: Literal["a4"] = "a4"  # We can add more sizes like "letter", "a3" etc. as needed
     margin: float = 36  # 0.5 inch margins

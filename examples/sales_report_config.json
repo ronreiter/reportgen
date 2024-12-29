@@ -54,6 +54,7 @@
             }
         }
     ],
+    "title": "Sales Performance Report",
     "orientation": "portrait",
     "paper_size": "a4",
     "margin": 36,

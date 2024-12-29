@@ -82,7 +82,8 @@ class Report:
             sections_html=sections_html,
             page_width=self.config.page_dimensions[0] - 2 * self.config.margin,
             page_height=self.config.page_dimensions[1] - 2 * self.config.margin,
-            logo_data=logo_data
+            logo_data=logo_data,
+            title=self.config.title
         )
         
         return html_content
