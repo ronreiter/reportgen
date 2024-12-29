@@ -1,0 +1,50 @@
+{
+    "data": {
+        "monthly_sales": [
+            {"month": "2024-01", "sales": 45000},
+            {"month": "2024-02", "sales": 52000},
+            {"month": "2024-03", "sales": 58000},
+            {"month": "2024-04", "sales": 61000},
+            {"month": "2024-05", "sales": 70000},
+            {"month": "2024-06", "sales": 85000},
+            {"month": "2024-07", "sales": 92000},
+            {"month": "2024-08", "sales": 88000},
+            {"month": "2024-09", "sales": 95000},
+            {"month": "2024-10", "sales": 102000},
+            {"month": "2024-11", "sales": 115000},
+            {"month": "2024-12", "sales": 125000}
+        ],
+        "top_products": [
+            {
+                "Product": "Premium Coffee Maker",
+                "Units Sold": 1200,
+                "Revenue": 360000,
+                "Category": "Appliances"
+            },
+            {
+                "Product": "Wireless Earbuds",
+                "Units Sold": 2500,
+                "Revenue": 325000,
+                "Category": "Electronics"
+            },
+            {
+                "Product": "Smart Watch",
+                "Units Sold": 800,
+                "Revenue": 280000,
+                "Category": "Electronics"
+            },
+            {
+                "Product": "Robot Vacuum",
+                "Units Sold": 600,
+                "Revenue": 270000,
+                "Category": "Appliances"
+            },
+            {
+                "Product": "Gaming Console",
+                "Units Sold": 450,
+                "Revenue": 225000,
+                "Category": "Electronics"
+            }
+        ]
+    }
+}

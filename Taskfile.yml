@@ -1,0 +1,41 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install dependencies using Poetry
+    cmds:
+      - poetry install
+
+  format:
+    desc: Format code using black and isort
+    cmds:
+      - poetry run black .
+      - poetry run isort .
+
+  test:
+    desc: Run tests
+    cmds:
+      - poetry run pytest
+
+  sales-report:
+    desc: Generate the sales report example
+    cmds:
+      - poetry run reportgen examples/sales_report_config.json examples/sales_report_data.json -o sales_report.pdf
+
+  clean:
+    desc: Clean generated files
+    cmds:
+      - rm -f examples/*.pdf
+      - rm -rf dist/
+      - rm -rf build/
+      - find . -type d -name "__pycache__" -exec rm -rf {} +
+
+  build:
+    desc: Build the package
+    cmds:
+      - poetry build
+
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
