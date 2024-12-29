@@ -38,9 +38,8 @@ class Report:
             
             if section.type == "graph":
                 # Convert Vega-Lite spec to SVG
-                chart_spec = section.config.vega_lite_spec
-                if "data" in chart_spec:
-                    chart_spec["data"]["values"] = section_data
+                chart_spec = section.config.vega_lite_spec.copy()  # Make a copy to avoid modifying the original
+                chart_spec["data"] = {"values": section_data}  # Always set the data
                 svg_data = vlc.vegalite_to_svg(chart_spec)
                 
                 section_html = f"""
