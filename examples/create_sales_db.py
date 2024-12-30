@@ -8,6 +8,10 @@ def create_sales_database():
     conn = sqlite3.connect('examples/sales.sqlite3')
     cursor = conn.cursor()
 
+    # Drop existing tables
+    cursor.execute('DROP TABLE IF EXISTS monthly_sales')
+    cursor.execute('DROP TABLE IF EXISTS products')
+
     # Create tables
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS monthly_sales (
@@ -22,7 +26,8 @@ def create_sales_database():
         name TEXT,
         category TEXT,
         units_sold INTEGER,
-        revenue DECIMAL(10, 2)
+        revenue DECIMAL(10, 2),
+        date DATE
     )
     ''')
 
@@ -43,18 +48,15 @@ def create_sales_database():
 
     # Generate product data
     products = [
-        ("Premium Coffee Maker", "Appliances", 1200, 360000),
-        ("Wireless Earbuds", "Electronics", 2500, 325000),
-        ("Smart Watch", "Electronics", 800, 280000),
-        ("Robot Vacuum", "Appliances", 600, 270000),
-        ("Gaming Console", "Electronics", 450, 225000)
+        ("Premium Coffee Maker", "Appliances", 1200, 360000, "2024-06-15"),
+        ("Wireless Earbuds", "Electronics", 2500, 325000, "2024-03-20"),
+        ("Smart Watch", "Electronics", 800, 280000, "2024-08-10"),
+        ("Robot Vacuum", "Appliances", 600, 270000, "2024-05-01"),
+        ("Gaming Console", "Electronics", 450, 225000, "2024-07-30")
     ]
 
     for product in products:
-        cursor.execute('''
-        INSERT INTO products (name, category, units_sold, revenue)
-        VALUES (?, ?, ?, ?)
-        ''', product)
+        cursor.execute('INSERT INTO products (name, category, units_sold, revenue, date) VALUES (?, ?, ?, ?, ?)', product)
 
     conn.commit()
     conn.close()

@@ -29,7 +29,9 @@ class Report:
         """Fetch data from SQL database"""
         engine = create_async_engine(data_source.connection_string)
         async with engine.connect() as conn:
-            result = await conn.execute(text(data_source.query))
+            query = text(data_source.query)
+            parameters = data_source.parameters or {}
+            result = await conn.execute(query, parameters)
             rows = result.mappings().all()
             return [dict(row) for row in rows]
 

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field, validator
 from pathlib import Path
 
@@ -24,6 +24,7 @@ class DataSource(BaseModel):
     connection_string: Optional[str] = None
     query: Optional[str] = None
     data: Optional[Dict[str, Union[List[dict], dict]]] = None
+    parameters: Optional[Dict[str, Any]] = None
 
     @validator("connection_string")
     def validate_connection_string(cls, v, values):
