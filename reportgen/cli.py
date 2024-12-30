@@ -1,20 +1,20 @@
-import argparse
+import click
+import asyncio
 from pathlib import Path
 from .report import Report
 
-def main():
-    parser = argparse.ArgumentParser(description='Generate PDF reports from JSON configurations')
-    parser.add_argument('config', type=str, help='Path to the report configuration JSON file')
-    parser.add_argument('data', type=str, help='Path to the report data JSON file')
-    parser.add_argument('-o', '--output', type=str, default='report.pdf',
-                       help='Output PDF file path (default: report.pdf)')
-    
-    args = parser.parse_args()
-    
-    # Create report and generate PDF
-    report = Report(args.config)
-    report.generate(args.data, args.output)
-    print(f"Report generated: {args.output}")
+@click.command()
+@click.argument('config', type=click.Path(exists=True))
+@click.argument('data', type=click.Path(exists=True), required=False)
+@click.option('-o', '--output', type=click.Path(), required=True, help='Output PDF file path')
+def main(config: str, data: str, output: str):
+    """Generate a PDF report from configuration and data files."""
+    async def generate_report():
+        report = Report(config)
+        await report.generate(data if data else None, output)
+        click.echo(f"Report generated: {output}")
+
+    asyncio.run(generate_report())
 
 if __name__ == '__main__':
     main()

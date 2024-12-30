@@ -1,0 +1,72 @@
+{
+    "title": "Sales Performance Report (SQL)",
+    "sections": [
+        {
+            "section_id": "monthly_sales",
+            "name": "Monthly Sales Trend",
+            "type": "graph",
+            "grid": {
+                "row_start": 0,
+                "row_end": 3,
+                "col_start": 0,
+                "col_end": 12
+            },
+            "config": {
+                "vega_lite_spec": {
+                    "mark": {"type": "line", "point": true},
+                    "height": 100,
+                    "encoding": {
+                        "x": {
+                            "field": "month",
+                            "type": "temporal",
+                            "title": "Month"
+                        },
+                        "y": {
+                            "field": "sales",
+                            "type": "quantitative",
+                            "title": "Sales ($)"
+                        },
+                        "tooltip": [
+                            {"field": "month", "type": "temporal", "title": "Month"},
+                            {"field": "sales", "type": "quantitative", "title": "Sales ($)"}
+                        ]
+                    }
+                }
+            },
+            "data_source": {
+                "type": "sql",
+                "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
+                "query": "SELECT strftime('%Y-%m', month) as month, sales FROM monthly_sales ORDER BY month"
+            }
+        },
+        {
+            "section_id": "top_products",
+            "name": "Top Selling Products",
+            "type": "table",
+            "grid": {
+                "row_start": 3,
+                "row_end": 6,
+                "col_start": 0,
+                "col_end": 12
+            },
+            "config": {
+                "columns": [
+                    {"name": "Product", "type": "string"},
+                    {"name": "Category", "type": "string"},
+                    {"name": "Units Sold", "type": "number"},
+                    {"name": "Revenue", "type": "number"}
+                ],
+                "max_results": 10
+            },
+            "data_source": {
+                "type": "sql",
+                "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
+                "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products ORDER BY revenue DESC"
+            }
+        }
+    ],
+    "orientation": "portrait",
+    "paper_size": "a4",
+    "margin": 36,
+    "logo_path": "assets/logo.png"
+}

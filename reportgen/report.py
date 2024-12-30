@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 import json
 from pathlib import Path
 import pandas as pd
@@ -6,8 +6,11 @@ import altair as alt
 import vl_convert as vlc
 from weasyprint import HTML, CSS
 from jinja2 import Environment, FileSystemLoader
-from .models import ReportConfig, ReportData, SectionConfig
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import text
+import asyncio
 import base64
+from .models import ReportConfig, ReportData, SectionConfig, DataSource
 
 class Report:
     def __init__(self, config: Union[str, Path, ReportConfig]):
@@ -22,12 +25,35 @@ class Report:
         templates_dir = Path(__file__).parent / "templates"
         self.jinja_env = Environment(loader=FileSystemLoader(templates_dir))
         
-    def _generate_html(self, data: ReportData) -> str:
+    async def _fetch_sql_data(self, data_source: DataSource) -> Dict[str, Any]:
+        """Fetch data from SQL database"""
+        engine = create_async_engine(data_source.connection_string)
+        async with engine.connect() as conn:
+            result = await conn.execute(text(data_source.query))
+            rows = result.mappings().all()
+            return [dict(row) for row in rows]
+
+    async def _get_section_data(self, section: SectionConfig, data: Optional[ReportData] = None) -> Any:
+        """Get data for a section from either SQL or JSON source"""
+        # Use section-specific data source if available, otherwise use report-level data source
+        data_source = section.data_source or self.config.data_source
+
+        if not data_source:
+            if not data or section.section_id not in data.data:
+                return None
+            return data.data[section.section_id]
+
+        if data_source.type == "sql":
+            return await self._fetch_sql_data(data_source)
+        else:  # json
+            return data_source.data.get(section.section_id)
+        
+    async def _generate_html(self, data: Optional[ReportData] = None) -> List[str]:
         """Generate HTML content for the report"""
         sections_html = []
         
         for section in self.config.sections:
-            section_data = data.data.get(section.section_id)
+            section_data = await self._get_section_data(section, data)
             if not section_data:
                 continue
                 
@@ -88,7 +114,7 @@ class Report:
         
         return html_content
         
-    def generate(self, data: Union[str, Path, ReportData], output_path: Union[str, Path]):
+    async def generate(self, data: Optional[Union[str, Path, ReportData]] = None, output_path: Union[str, Path] = None):
         """Generate a PDF report using the configuration and data"""
         if isinstance(data, (str, Path)):
             with open(data) as f:
@@ -96,17 +122,8 @@ class Report:
         elif isinstance(data, dict):
             data = ReportData.model_validate(data)
             
-        sections_html = self._generate_html(data)
+        sections_html = await self._generate_html(data)
         html_content = self._render_html(sections_html)
         
         # Convert HTML to PDF using WeasyPrint
-        HTML(string=html_content).write_pdf(
-            output_path,
-            stylesheets=[],
-            presentational_hints=True
-        )
-
-    @classmethod
-    def from_file(cls, config_path: Union[str, Path]) -> 'Report':
-        """Create a Report instance from a configuration file"""
-        return cls(config_path)
+        HTML(string=html_content).write_pdf(output_path)

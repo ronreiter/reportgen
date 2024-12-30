@@ -17,15 +17,27 @@ tasks:
     cmds:
       - poetry run pytest
 
+  create-db:
+    desc: Create example SQLite database
+    cmds:
+      - poetry run python examples/create_sales_db.py
+
   sales-report:
-    desc: Generate the sales report example
+    desc: Generate the sales report example using JSON data
     cmds:
       - poetry run reportgen examples/sales_report_config.json examples/sales_report_data.json -o sales_report.pdf
+
+  sales-report-sql:
+    desc: Generate the sales report example using SQL data
+    deps: [create-db]
+    cmds:
+      - poetry run reportgen examples/sales_report_sql_config.json -o sales_report_sql.pdf
 
   clean:
     desc: Clean generated files
     cmds:
       - rm -f examples/*.pdf
+      - rm -f examples/*.sqlite3
       - rm -rf dist/
       - rm -rf build/
       - find . -type d -name "__pycache__" -exec rm -rf {} +

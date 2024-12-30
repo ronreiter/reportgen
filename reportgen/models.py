@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Union, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pathlib import Path
 
 class GridPosition(BaseModel):
@@ -19,12 +19,37 @@ class TableConfig(BaseModel):
 class GraphConfig(BaseModel):
     vega_lite_spec: dict
 
+class DataSource(BaseModel):
+    type: Literal["json", "sql"]
+    connection_string: Optional[str] = None
+    query: Optional[str] = None
+    data: Optional[Dict[str, Union[List[dict], dict]]] = None
+
+    @validator("connection_string")
+    def validate_connection_string(cls, v, values):
+        if values.get("type") == "sql" and not v:
+            raise ValueError("connection_string is required for SQL data source")
+        return v
+
+    @validator("query")
+    def validate_query(cls, v, values):
+        if values.get("type") == "sql" and not v:
+            raise ValueError("query is required for SQL data source")
+        return v
+
+    @validator("data")
+    def validate_data(cls, v, values):
+        if values.get("type") == "json" and not v:
+            raise ValueError("data is required for JSON data source")
+        return v
+
 class SectionConfig(BaseModel):
     section_id: str
     name: Optional[str] = None
     type: Literal["table", "graph"]
     grid: GridPosition
     config: Union[TableConfig, GraphConfig]
+    data_source: Optional[DataSource] = None  # If not provided, use report-level data source
 
 class ReportConfig(BaseModel):
     sections: List[SectionConfig]
@@ -33,6 +58,7 @@ class ReportConfig(BaseModel):
     paper_size: Literal["a4"] = "a4"  # We can add more sizes like "letter", "a3" etc. as needed
     margin: float = 36  # 0.5 inch margins
     logo_path: Optional[str] = None  # Path to logo file, relative to project root
+    data_source: Optional[DataSource] = None  # Default data source for all sections
 
     @property
     def page_dimensions(self) -> tuple[float, float]:
