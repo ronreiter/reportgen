@@ -27,10 +27,16 @@ class Report:
         
     async def _fetch_sql_data(self, data_source: DataSource) -> Dict[str, Any]:
         """Fetch data from SQL database"""
-        engine = create_async_engine(data_source.connection_string)
+        if data_source.connection_id not in self.config.connections:
+            raise ValueError(f"Connection ID '{data_source.connection_id}' not found in connections")
+            
+        connection_config = self.config.connections[data_source.connection_id]
+        engine = create_async_engine(connection_config.connection_string)
+        
         async with engine.connect() as conn:
             query = text(data_source.query)
-            parameters = data_source.parameters or {}
+            # Use global parameters if available
+            parameters = self.config.parameters or {}
             result = await conn.execute(query, parameters)
             rows = result.mappings().all()
             return [dict(row) for row in rows]

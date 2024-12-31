@@ -1,5 +1,14 @@
 {
     "title": "Sales Performance Report (SQL)",
+    "connections": {
+        "sales_db": {
+            "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
+            "type": "sqlite"
+        }
+    },
+    "parameters": {
+        "year": "2024"
+    },
     "sections": [
         {
             "section_id": "monthly_sales",
@@ -35,11 +44,8 @@
             },
             "data_source": {
                 "type": "sql",
-                "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
-                "query": "SELECT strftime('%Y-%m', month) as month, sales FROM monthly_sales WHERE strftime('%Y', month) = :year ORDER BY month",
-                "parameters": {
-                    "year": "2024"
-                }
+                "connection_id": "sales_db",
+                "query": "SELECT strftime('%Y-%m', month) as month, sales FROM monthly_sales WHERE strftime('%Y', month) = :year ORDER BY month"
             }
         },
         {
@@ -63,11 +69,8 @@
             },
             "data_source": {
                 "type": "sql",
-                "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
-                "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products WHERE strftime('%Y', date) = :year ORDER BY revenue DESC",
-                "parameters": {
-                    "year": "2024"
-                }
+                "connection_id": "sales_db",
+                "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products WHERE strftime('%Y', date) = :year ORDER BY revenue DESC"
             }
         }
     ],

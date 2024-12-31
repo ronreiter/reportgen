@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Literal, Any
+from typing import Dict, List, Optional, Union, Literal, Any, Tuple
 from pydantic import BaseModel, Field, validator
 from pathlib import Path
 
@@ -19,17 +19,21 @@ class TableConfig(BaseModel):
 class GraphConfig(BaseModel):
     vega_lite_spec: dict
 
+class ConnectionConfig(BaseModel):
+    connection_string: str
+    type: Literal["sqlite", "postgresql", "mysql"] = "sqlite"
+    options: Optional[Dict[str, Any]] = None
+
 class DataSource(BaseModel):
     type: Literal["json", "sql"]
-    connection_string: Optional[str] = None
+    connection_id: Optional[str] = None
     query: Optional[str] = None
     data: Optional[Dict[str, Union[List[dict], dict]]] = None
-    parameters: Optional[Dict[str, Any]] = None
 
-    @validator("connection_string")
-    def validate_connection_string(cls, v, values):
+    @validator("connection_id")
+    def validate_connection_id(cls, v, values):
         if values.get("type") == "sql" and not v:
-            raise ValueError("connection_string is required for SQL data source")
+            raise ValueError("connection_id is required for SQL data source")
         return v
 
     @validator("query")
@@ -60,9 +64,11 @@ class ReportConfig(BaseModel):
     margin: float = 36  # 0.5 inch margins
     logo_path: Optional[str] = None  # Path to logo file, relative to project root
     data_source: Optional[DataSource] = None  # Default data source for all sections
+    connections: Dict[str, ConnectionConfig] = {}
+    parameters: Optional[Dict[str, Any]] = None
 
     @property
-    def page_dimensions(self) -> tuple[float, float]:
+    def page_dimensions(self) -> Tuple[float, float]:
         """Return page dimensions in points (1/72 inch)"""
         # A4 dimensions in points (595.276 x 841.890)
         if self.paper_size == "a4":
