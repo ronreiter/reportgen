@@ -16,9 +16,9 @@
             "type": "graph",
             "grid": {
                 "row_start": 0,
-                "row_end": 3,
+                "row_end": 1,
                 "col_start": 0,
-                "col_end": 12
+                "col_end": 6
             },
             "config": {
                 "vega_lite_spec": {
@@ -49,12 +49,50 @@
             }
         },
         {
+            "section_id": "sales_distribution",
+            "name": "Sales Distribution",
+            "type": "graph",
+            "grid": {
+                "row_start": 0,
+                "row_end": 1,
+                "col_start": 6,
+                "col_end": 12
+            },
+            "config": {
+                "vega_lite_spec": {
+                    "mark": "arc",
+                    "height": 200,
+                    "encoding": {
+                        "theta": {
+                            "field": "sales",
+                            "type": "quantitative"
+                        },
+                        "color": {
+                            "field": "month",
+                            "type": "temporal",
+                            "timeUnit": "month",
+                            "title": "Month"
+                        },
+                        "tooltip": [
+                            {"field": "month", "type": "temporal", "title": "Month"},
+                            {"field": "sales", "type": "quantitative", "title": "Sales ($)"}
+                        ]
+                    }
+                }
+            },
+            "data_source": {
+                "type": "sql",
+                "connection_id": "sales_db",
+                "query": "SELECT strftime('%Y-%m', month) as month, sales FROM monthly_sales WHERE strftime('%Y', month) = :year ORDER BY month"
+            }
+        },
+        {
             "section_id": "top_products",
             "name": "Top Selling Products",
             "type": "table",
             "grid": {
-                "row_start": 3,
-                "row_end": 6,
+                "row_start": 1,
+                "row_end": 2,
                 "col_start": 0,
                 "col_end": 12
             },
