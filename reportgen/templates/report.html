@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Slab:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        @page {
+            margin: 60px 0 40px 0;
+            @top-left {
+                content: element(header);
+            }
+            @bottom-center {
+                content: counter(page);
+                font-family: 'Roboto', sans-serif;
+                font-size: 12px;
+                color: #666;
+            }
+        }
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -16,22 +28,20 @@
             margin-top: 0;
             color: #222;
         }
-        .logo {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            margin: 0;
+        .header {
+            position: running(header);
+            background: white;
+            padding: 15px 30px;
+            height: 20px;
         }
         .logo img {
-            max-height: 20px;
-            width: auto;
+            height: 20px;
         }
         .report-title {
             font-family: 'Roboto Slab', serif;
             font-size: 24px;
-            margin: 0 0 30px;
+            margin: 20px 0 30px;
             padding-top: 10px;
-            text-align: center;
         }
         .report-grid {
             display: grid;
@@ -46,7 +56,6 @@
             border-radius: 5px;
             display: flex;
             flex-direction: column;
-            height: 100%;
             box-sizing: border-box;
             overflow: hidden;
         }
@@ -58,6 +67,7 @@
         }
         .section.graph {
             overflow: hidden;
+            align-items: center;
         }
         .section.graph > div {
             flex: 1;
@@ -113,18 +123,17 @@
                 font-size: 12pt;
                 line-height: 1.4;
             }
-            .section {
-                page-break-inside: avoid;
-            }
         }
     </style>
 </head>
 <body>
-    {% if logo_data %}
-    <div class="logo">
-        <img src="{{ logo_data }}" alt="Logo" height="40">
+    <div class="header" id="header">
+        {% if logo_data %}
+        <div class="logo">
+            <img src="{{ logo_data }}" alt="Logo">
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
     {% if title %}
     <div class="report-title">
         <h3>{{ title }}</h3>
