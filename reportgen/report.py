@@ -89,7 +89,46 @@ class Report:
                 if len(df) > section.config.max_results:
                     df = df.head(section.config.max_results)
                 
-                table_html = df.to_html(classes="data-table", index=False)
+                # Format the columns based on configuration
+                formatters = {}
+                classes = {}
+                for col in section.config.columns:
+                    if col.type == "number":
+                        if col.format and col.format == "0,0":
+                            formatters[col.name] = lambda x: f"{int(x):,}"
+                            classes[col.name] = "number"
+                        elif col.format and col.format.startswith("$"):
+                            formatters[col.name] = lambda x: f"${float(x):,.2f}"
+                            classes[col.name] = "currency"
+                        else:
+                            formatters[col.name] = lambda x: f"{float(x):,}"
+                            classes[col.name] = "number"
+                
+                def format_td(value, column):
+                    css_class = classes.get(column, "")
+                    formatter = formatters.get(column)
+                    try:
+                        formatted_value = formatter(value) if formatter else value
+                    except (ValueError, TypeError):
+                        formatted_value = value
+                    return f'<td class="{css_class}">{formatted_value}</td>'
+                
+                # Generate custom HTML with proper formatting
+                headers = [f"<th>{col}</th>" for col in df.columns]
+                header_row = f"<tr>{''.join(headers)}</tr>"
+                
+                rows = []
+                for _, row in df.iterrows():
+                    cells = [format_td(row[col], col) for col in df.columns]
+                    rows.append(f"<tr>{''.join(cells)}</tr>")
+                
+                table_html = f"""
+                <table class="data-table">
+                    <thead>{header_row}</thead>
+                    <tbody>{''.join(rows)}</tbody>
+                </table>
+                """
+                
                 section_html = f"""
                 <div class="section table" style="{section_style}">
                     {f'<h3>{section.name}</h3>' if section.name else ''}

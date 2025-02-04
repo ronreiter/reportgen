@@ -10,7 +10,8 @@ class GridPosition(BaseModel):
 
 class TableColumnConfig(BaseModel):
     name: str
-    type: str  # could be 'string', 'number', 'date', etc.
+    type: Literal["string", "number", "date"]
+    format: Optional[str] = None
 
 class TableConfig(BaseModel):
     columns: List[TableColumnConfig]
