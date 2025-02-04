@@ -146,16 +146,25 @@ class Report:
         
         logo_data = None
         if self.config.logo_path:
-            logo_path = Path(self.config.logo_path)
-            if logo_path.exists():
-                with open(logo_path, "rb") as f:
-                    logo_data = base64.b64encode(f.read()).decode()
+            # Convert relative path to absolute using the config file's location
+            if isinstance(self.config.logo_path, str):
+                base_dir = Path.cwd()
+                logo_path = base_dir / self.config.logo_path
+            else:
+                logo_path = Path(self.config.logo_path)
+                
+            if not logo_path.exists():
+                print(f"Warning: Logo file not found at {logo_path}")
+            else:
+                print(f"Found logo at: {logo_path}")
+                with open(logo_path, 'rb') as f:
+                    logo_data = base64.b64encode(f.read()).decode('utf-8')
 
         html_content = template.render(
             sections_html=sections_html,
             page_width=self.config.page_dimensions[0] - 2 * self.config.margin,
             page_height=self.config.page_dimensions[1] - 2 * self.config.margin,
-            logo_data=logo_data,
+            logo_data=f"data:image/png;base64,{logo_data}" if logo_data else None,
             title=self.config.title
         )
         
@@ -172,5 +181,14 @@ class Report:
         sections_html = await self._generate_html(data)
         html_content = self._render_html(sections_html)
         
-        # Convert HTML to PDF using WeasyPrint
-        HTML(string=html_content).write_pdf(output_path)
+        # Convert HTML to PDF using WeasyPrint with custom margins
+        margin = f"{self.config.margin}px"
+        HTML(string=html_content).write_pdf(
+            output_path,
+            stylesheets=[CSS(string=f"""
+                @page {{
+                    margin: {margin};
+                    size: {self.config.paper_size} {self.config.orientation};
+                }}
+            """)]
+        )

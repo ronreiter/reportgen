@@ -32,6 +32,7 @@ tasks:
     deps: [create-db]
     cmds:
       - poetry run reportgen examples/sales_report_sql_config.json -o sales_report_sql.pdf
+      - open sales_report_sql.pdf
 
   clean:
     desc: Clean generated files
