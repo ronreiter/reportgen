@@ -1,199 +1,274 @@
 {
-    "title": "Sales Performance Report (SQL)",
-    "connections": {
-        "sales_db": {
-            "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
-            "type": "sqlite"
+  "title": "Sales Performance Report (SQL)",
+  "connections": {
+    "sales_db": {
+      "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
+      "type": "sqlite"
+    }
+  },
+  "parameters": {
+    "year": "2024"
+  },
+  "sections": [
+    {
+      "section_id": "sales_by_category",
+      "name": "Sales by Category",
+      "type": "graph",
+      "grid": {
+        "row_start": 0,
+        "row_end": 8,
+        "col_start": 0,
+        "col_end": 6
+      },
+      "config": {
+        "vega_lite_spec": {
+          "mark": {
+            "type": "bar",
+            "tooltip": true
+          },
+          "config": {
+            "title": {
+              "font": "Roboto Slab",
+              "fontSize": 16
+            },
+            "axis": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
+            },
+            "legend": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "category",
+              "type": "nominal",
+              "title": "Category",
+              "axis": {
+                "labelAngle": 45,
+                "labelOverlap": true
+              }
+            },
+            "y": {
+              "field": "total_sales",
+              "type": "quantitative",
+              "title": "Total Sales ($)",
+              "axis": {
+                "format": ",.0f",
+                "labelExpr": "'$' + datum.label"
+              }
+            },
+            "color": {
+              "field": "category",
+              "type": "nominal",
+              "scale": {
+                "scheme": "category10"
+              }
+            }
+          }
         }
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "sales_db",
+        "query": "SELECT category, SUM(revenue) as total_sales FROM products GROUP BY category ORDER BY total_sales DESC"
+      }
     },
-    "parameters": {
-        "year": "2024"
-    },
-    "sections": [
-        {
-            "section_id": "sales_by_category",
-            "name": "Sales by Category",
-            "type": "graph",
-            "grid": {
-                "row_start": 0,
-                "row_end": 8,
-                "col_start": 0,
-                "col_end": 6
+    {
+      "section_id": "sales_distribution",
+      "name": "Sales Distribution",
+      "type": "graph",
+      "grid": {
+        "row_start": 0,
+        "row_end": 8,
+        "col_start": 6,
+        "col_end": 12
+      },
+      "config": {
+        "vega_lite_spec": {
+          "mark": {
+            "type": "arc",
+            "tooltip": true,
+            "innerRadius": 50
+          },
+          "config": {
+            "title": {
+              "font": "Roboto Slab",
+              "fontSize": 16
             },
-            "config": {
-                "vega_lite_spec": {
-                    "mark": {"type": "bar", "tooltip": true},
-                    "config": {
-                        "title": {"font": "Roboto Slab", "fontSize": 16},
-                        "axis": {"titleFont": "Roboto Slab", "labelFont": "Roboto"},
-                        "legend": {"titleFont": "Roboto Slab", "labelFont": "Roboto"}
-                    },
-                    "encoding": {
-                        "x": {
-                            "field": "category",
-                            "type": "nominal",
-                            "title": "Category",
-                            "axis": {
-                                "labelAngle": 45,
-                                "labelOverlap": true
-                            }
-                        },
-                        "y": {
-                            "field": "total_sales",
-                            "type": "quantitative",
-                            "title": "Total Sales ($)",
-                            "axis": {
-                                "format": ",.0f",
-                                "labelExpr": "'$' + datum.label"
-                            }
-                        },
-                        "color": {
-                            "field": "category",
-                            "type": "nominal",
-                            "scale": {"scheme": "category10"}
-                        }
-                    }
-                }
+            "axis": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
             },
-            "data_source": {
-                "type": "sql",
-                "connection_id": "sales_db",
-                "query": "SELECT category, SUM(revenue) as total_sales FROM products GROUP BY category ORDER BY total_sales DESC"
+            "legend": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
             }
-        },
-        {
-            "section_id": "sales_distribution",
-            "name": "Sales Distribution",
-            "type": "graph",
-            "grid": {
-                "row_start": 0,
-                "row_end": 8,
-                "col_start": 6,
-                "col_end": 12
+          },
+          "encoding": {
+            "theta": {
+              "field": "sales",
+              "type": "quantitative"
             },
-            "config": {
-                "vega_lite_spec": {
-                    "mark": {
-                        "type": "arc",
-                        "tooltip": true,
-                        "innerRadius": 50
-                    },
-                    "config": {
-                        "title": {"font": "Roboto Slab", "fontSize": 16},
-                        "axis": {"titleFont": "Roboto Slab", "labelFont": "Roboto"},
-                        "legend": {"titleFont": "Roboto Slab", "labelFont": "Roboto"}
-                    },
-                    "encoding": {
-                        "theta": {"field": "sales", "type": "quantitative"},
-                        "color": {
-                            "field": "month",
-                            "type": "nominal",
-                            "scale": {"scheme": "spectral"},
-                            "legend": {
-                                "orient": "right",
-                                "title": "Month",
-                                "labelLimit": 150
-                            }
-                        },
-                        "tooltip": [
-                            {"field": "month", "type": "nominal", "title": "Month"},
-                            {"field": "sales", "type": "quantitative", "title": "Sales ($)", "format": "$,.2f"}
-                        ]
-                    }
-                }
+            "color": {
+              "field": "month",
+              "type": "nominal",
+              "scale": {
+                "scheme": "spectral"
+              },
+              "legend": {
+                "orient": "right",
+                "title": "Month",
+                "labelLimit": 150
+              }
             },
-            "data_source": {
-                "type": "sql",
-                "connection_id": "sales_db",
-                "query": "SELECT strftime('%Y-%m', date) as month, SUM(revenue) as sales FROM products GROUP BY month ORDER BY month"
-            }
-        },
-        {
-            "section_id": "top_products",
-            "name": "Top Selling Products",
-            "type": "table",
-            "grid": {
-                "row_start": 8,
-                "row_end": 20,
-                "col_start": 0,
-                "col_end": 12
-            },
-            "config": {
-                "columns": [
-                    {"name": "Product", "type": "string"},
-                    {"name": "Category", "type": "string"},
-                    {"name": "Units Sold", "type": "number", "format": "0,0", "parse": "int"},
-                    {"name": "Revenue", "type": "number", "format": "$0,0.00", "parse": "float"}
-                ],
-                "max_results": 10,
-                "data": {
-                    "sql": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
-                }
-            },
-            "data_source": {
-                "type": "sql",
-                "connection_id": "sales_db",
-                "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
-            }
-        },
-        {
-            "section_id": "monthly_sales",
-            "name": "Monthly Sales Trend",
-            "type": "graph",
-            "grid": {
-                "row_start": 20,
-                "row_end": 30,
-                "col_start": 0,
-                "col_end": 12
-            },
-            "config": {
-                "vega_lite_spec": {
-                    "mark": {
-                        "type": "line",
-                        "point": true,
-                        "tooltip": true
-                    },
-                    "config": {
-                        "title": {"font": "Roboto Slab", "fontSize": 16},
-                        "axis": {"titleFont": "Roboto Slab", "labelFont": "Roboto"},
-                        "legend": {"titleFont": "Roboto Slab", "labelFont": "Roboto"}
-                    },
-                    "encoding": {
-                        "x": {
-                            "field": "month",
-                            "type": "temporal",
-                            "title": "Month",
-                            "axis": {
-                                "labelAngle": 45,
-                                "labelOverlap": true,
-                                "format": "%B %Y"
-                            }
-                        },
-                        "y": {
-                            "field": "sales",
-                            "type": "quantitative",
-                            "title": "Sales ($)",
-                            "axis": {
-                                "format": ",.0f",
-                                "labelExpr": "'$' + datum.label"
-                            }
-                        },
-                        "tooltip": [
-                            {"field": "month", "type": "temporal", "title": "Month", "format": "%B %Y"},
-                            {"field": "sales", "type": "quantitative", "title": "Sales", "format": "$,.2f"}
-                        ]
-                    }
-                }
-            },
-            "data_source": {
-                "type": "sql",
-                "connection_id": "sales_db",
-                "query": "SELECT strftime('%Y-%m', date) as month, SUM(revenue) as sales FROM products GROUP BY month ORDER BY month"
-            }
+            "tooltip": [
+              {
+                "field": "month",
+                "type": "nominal",
+                "title": "Month"
+              },
+              {
+                "field": "sales",
+                "type": "quantitative",
+                "title": "Sales ($)",
+                "format": "$,.2f"
+              }
+            ]
+          }
         }
-    ],
-    "orientation": "portrait",
-    "paper_size": "a4",
-    "margin": 5,
-    "logo_path": "assets/logo.png"
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "sales_db",
+        "query": "SELECT strftime('%Y-%m', date) as month, SUM(revenue) as sales FROM products GROUP BY month ORDER BY month"
+      }
+    },
+    {
+      "section_id": "top_products",
+      "name": "Top Selling Products",
+      "type": "table",
+      "grid": {
+        "row_start": 8,
+        "row_end": 20,
+        "col_start": 0,
+        "col_end": 12
+      },
+      "config": {
+        "columns": [
+          {
+            "name": "Product",
+            "type": "string"
+          },
+          {
+            "name": "Category",
+            "type": "string"
+          },
+          {
+            "name": "Units Sold",
+            "type": "number",
+            "format": "0,0",
+            "parse": "int"
+          },
+          {
+            "name": "Revenue",
+            "type": "number",
+            "format": "$0,0.00",
+            "parse": "float"
+          }
+        ],
+        "max_results": 10,
+        "data": {
+          "sql": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
+        }
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "sales_db",
+        "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
+      }
+    },
+    {
+      "section_id": "monthly_sales",
+      "name": "Monthly Sales Trend",
+      "type": "graph",
+      "grid": {
+        "row_start": 20,
+        "row_end": 30,
+        "col_start": 0,
+        "col_end": 12
+      },
+      "config": {
+        "vega_lite_spec": {
+          "autosize": {
+            "type": "fit-y"
+          },
+          "mark": {
+            "type": "line",
+            "point": true,
+            "tooltip": true
+          },
+          "config": {
+            "title": {
+              "font": "Roboto Slab",
+              "fontSize": 16
+            },
+            "axis": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
+            },
+            "legend": {
+              "titleFont": "Roboto Slab",
+              "labelFont": "Roboto"
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "month",
+              "type": "temporal",
+              "title": "Month",
+              "axis": {
+                "labelAngle": 45,
+                "labelOverlap": true,
+                "format": "%B %Y"
+              }
+            },
+            "y": {
+              "field": "sales",
+              "type": "quantitative",
+              "title": "Sales ($)",
+              "axis": {
+                "format": ",.0f",
+                "labelExpr": "'$' + datum.label"
+              }
+            },
+            "tooltip": [
+              {
+                "field": "month",
+                "type": "temporal",
+                "title": "Month",
+                "format": "%B %Y"
+              },
+              {
+                "field": "sales",
+                "type": "quantitative",
+                "title": "Sales",
+                "format": "$,.2f"
+              }
+            ]
+          }
+        }
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "sales_db",
+        "query": "SELECT strftime('%Y-%m', date) as month, SUM(revenue) as sales FROM products GROUP BY month ORDER BY month"
+      }
+    }
+  ],
+  "orientation": "portrait",
+  "paper_size": "a4",
+  "margin": 5,
+  "logo_path": "assets/logo.png"
 }
