@@ -15,13 +15,16 @@
       "name": "Sales by Category",
       "type": "graph",
       "grid": {
-        "row_start": 0,
-        "row_end": 8,
+        "row_number": 0,
+        "row_height": 300,
         "col_start": 0,
         "col_end": 6
       },
       "config": {
         "vega_lite_spec": {
+          "autosize": {
+            "type": "fit"
+          },
           "mark": {
             "type": "bar",
             "tooltip": true
@@ -80,13 +83,16 @@
       "name": "Sales Distribution",
       "type": "graph",
       "grid": {
-        "row_start": 0,
-        "row_end": 8,
+        "row_number": 0,
+        "row_height": 300,
         "col_start": 6,
         "col_end": 12
       },
       "config": {
         "vega_lite_spec": {
+          "autosize": {
+            "type": "fit-y"
+          },
           "mark": {
             "type": "arc",
             "tooltip": true,
@@ -150,8 +156,8 @@
       "name": "Top Selling Products",
       "type": "table",
       "grid": {
-        "row_start": 8,
-        "row_end": 20,
+        "row_number": 1,
+        "row_height": 400,
         "col_start": 0,
         "col_end": 12
       },
@@ -180,13 +186,13 @@
         ],
         "max_results": 10,
         "data": {
-          "sql": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
+          "sql": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 10"
         }
       },
       "data_source": {
         "type": "sql",
         "connection_id": "sales_db",
-        "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 5"
+        "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 10"
       }
     },
     {
@@ -194,15 +200,15 @@
       "name": "Monthly Sales Trend",
       "type": "graph",
       "grid": {
-        "row_start": 20,
-        "row_end": 30,
+        "row_number": 2,
+        "row_height": 300,
         "col_start": 0,
         "col_end": 12
       },
       "config": {
         "vega_lite_spec": {
           "autosize": {
-            "type": "fit-y"
+            "type": "fit"
           },
           "mark": {
             "type": "line",

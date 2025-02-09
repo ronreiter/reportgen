@@ -40,14 +40,20 @@
         .report-title {
             font-family: 'Roboto Slab', serif;
             font-size: 24px;
-            padding: 20px 0;
+            margin-bottom: 20px;
         }
         .report-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            grid-auto-rows: 20px;
+            display: flex;
+            flex-direction: column;
             gap: 20px;
             padding: 20px;
+        }
+        .report-row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            overflow: hidden;
+            margin-bottom: 20px;
         }
         .section {
             background: white;
@@ -68,16 +74,9 @@
         }
         .section.graph > div {
             flex: 1;
-            min-height: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .section.graph svg {
-            max-width: 100%;
-            max-height: 100%;
-            width: 100%;
-            height: 100%;
         }
         .data-table {
             width: 100%;
@@ -131,16 +130,18 @@
         </div>
         {% endif %}
     </div>
-    {% if title %}
-    <div class="report-title">
-        <h3>{{ title }}</h3>
-    </div>
-    {% endif %}
     <div class="report-grid">
-    {% for section_html in sections_html %}
-        {{ section_html|safe }}
-    {% endfor %}
+      {% if title %}
+      <div class="report-title">
+          <h3>{{ title }}</h3>
+      </div>
+      {% endif %}
 
+    {% for row_html in sections_html %}
+        <div class="report-row">
+            {{ row_html|safe }}
+        </div>
+    {% endfor %}
     </div>
 </body>
 </html>

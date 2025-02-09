@@ -63,89 +63,106 @@ class Report:
 
     async def _generate_html(self, data: Optional[ReportData] = None) -> List[str]:
         """Generate HTML content for the report"""
-        sections_html: List[str] = []
-
+        # Group sections by row_number
+        sections_by_row = {}
         for section in self.config.sections:
-            section_data = await self._get_section_data(section, data)
-            if not section_data:
-                continue
+            row_num = section.grid.row_number
+            if row_num not in sections_by_row:
+                sections_by_row[row_num] = []
+            sections_by_row[row_num].append(section)
 
-            section_style = (
-                f"grid-row: {section.grid.row_start + 1} / {section.grid.row_end + 1}; "
-                f"grid-column: {section.grid.col_start + 1} / {section.grid.col_end + 1};"
+        # Sort rows and sections within rows
+        sections_html = []
+        for row_num in sorted(sections_by_row.keys()):
+            row_sections = sorted(
+                sections_by_row[row_num], key=lambda s: s.grid.col_start
             )
+            row_html = []
 
-            if section.type == "graph":
-                # Convert Vega-Lite spec to SVG
-                chart_spec = (
-                    section.config.vega_lite_spec.copy()
-                )  # Make a copy to avoid modifying the original
-                chart_spec["data"] = {"values": section_data}  # Always set the data
-                svg_data = vlc.vegalite_to_svg(chart_spec)
+            for section in row_sections:
+                section_data = await self._get_section_data(section, data)
+                if not section_data:
+                    continue
 
-                section_html = f"""
-                <div class="section graph" style="{section_style}">
-                    {f'<h3>{section.name}</h3>' if section.name else ''}
-                    {svg_data}
-                </div>
-                """
+                # Calculate section height style if specified
+                height_style = (
+                    f"height: {section.grid.row_height}px;"
+                    if section.grid.row_height
+                    else ""
+                )
+                section_style = f"grid-column: {section.grid.col_start + 1} / {section.grid.col_end + 1}; {height_style}"
 
-            elif section.type == "table":
-                # Create DataFrame and generate table HTML
-                df = pd.DataFrame(section_data)
-                if len(df) > section.config.max_results:
-                    df = df.head(section.config.max_results)
+                if section.type == "graph":
+                    # Convert Vega-Lite spec to SVG
+                    chart_spec = section.config.vega_lite_spec.copy()
+                    chart_spec["data"] = {"values": section_data}
+                    svg_data = vlc.vegalite_to_svg(chart_spec)
 
-                # Format the columns based on configuration
-                formatters = {}
-                classes = {}
-                for col in section.config.columns:
-                    if col.type == "number":
-                        if col.format and col.format == "0,0":
-                            formatters[col.name] = lambda x: f"{int(x):,}"
-                            classes[col.name] = "number"
-                        elif col.format and col.format.startswith("$"):
-                            formatters[col.name] = lambda x: f"${float(x):,.2f}"
-                            classes[col.name] = "currency"
-                        else:
-                            formatters[col.name] = lambda x: f"{float(x):,}"
-                            classes[col.name] = "number"
+                    section_html = f"""
+                    <div class="section graph" style="{section_style}">
+                        {f'<h3>{section.name}</h3>' if section.name else ''}
+                        {svg_data}
+                    </div>
+                    """
 
-                def format_td(value, column):
-                    css_class = classes.get(column, "")
-                    formatter = formatters.get(column)
-                    try:
-                        formatted_value = formatter(value) if formatter else value
-                    except (ValueError, TypeError):
-                        formatted_value = value
-                    return f'<td class="{css_class}">{formatted_value}</td>'
+                elif section.type == "table":
+                    # Create DataFrame and generate table HTML
+                    df = pd.DataFrame(section_data)
+                    if len(df) > section.config.max_results:
+                        df = df.head(section.config.max_results)
 
-                # Generate custom HTML with proper formatting
-                headers = [f"<th>{col}</th>" for col in df.columns]
-                header_row = f"<tr>{''.join(headers)}</tr>"
+                    # Format the columns based on configuration
+                    formatters = {}
+                    classes = {}
+                    for col in section.config.columns:
+                        if col.type == "number":
+                            if col.format and col.format == "0,0":
+                                formatters[col.name] = lambda x: f"{int(x):,}"
+                                classes[col.name] = "number"
+                            elif col.format and col.format.startswith("$"):
+                                formatters[col.name] = lambda x: f"${float(x):,.2f}"
+                                classes[col.name] = "currency"
+                            else:
+                                formatters[col.name] = lambda x: f"{float(x):,}"
+                                classes[col.name] = "number"
 
-                rows = []
-                for _, row in df.iterrows():
-                    cells = [format_td(row[col], col) for col in df.columns]
-                    rows.append(f"<tr>{''.join(cells)}</tr>")
+                    def format_td(value, column):
+                        css_class = classes.get(column, "")
+                        formatter = formatters.get(column)
+                        try:
+                            formatted_value = formatter(value) if formatter else value
+                        except (ValueError, TypeError):
+                            formatted_value = value
+                        return f'<td class="{css_class}">{formatted_value}</td>'
 
-                table_html = f"""
-                <table class="data-table">
-                    <thead>{header_row}</thead>
-                    <tbody>{''.join(rows)}</tbody>
-                </table>
-                """
+                    # Generate custom HTML with proper formatting
+                    headers = [f"<th>{col}</th>" for col in df.columns]
+                    header_row = f"<tr>{''.join(headers)}</tr>"
 
-                section_html = f"""
-                <div class="section table" style="{section_style}">
-                    {f'<h3>{section.name}</h3>' if section.name else ''}
-                    {table_html}
-                </div>
-                """
-            else:
-                raise Exception(f"Unsupported section type: {section.type}")
+                    rows = []
+                    for _, row in df.iterrows():
+                        cells = [format_td(row[col], col) for col in df.columns]
+                        rows.append(f"<tr>{''.join(cells)}</tr>")
 
-            sections_html.append(section_html)
+                    table_html = f"""
+                    <table class="data-table">
+                        <thead>{header_row}</thead>
+                        <tbody>{''.join(rows)}</tbody>
+                    </table>
+                    """
+
+                    section_html = f"""
+                    <div class="section table" style="{section_style}">
+                        {f'<h3>{section.name}</h3>' if section.name else ''}
+                        {table_html}
+                    </div>
+                    """
+                else:
+                    raise Exception(f"Unsupported section type: {section.type}")
+
+                row_html.append(section_html)
+
+            sections_html.append("".join(row_html))
 
         return sections_html
 

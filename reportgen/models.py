@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field, validator
 from pathlib import Path
 
 class GridPosition(BaseModel):
-    row_start: int
-    row_end: int
+    row_number: int
+    row_height: Optional[int] = None
     col_start: int
     col_end: int
 
