@@ -14,11 +14,89 @@
   },
   "sections": [
     {
+      "section_id": "encryption_at_rest",
+      "name": "Encryption At Rest",
+      "type": "graph",
+      "grid": {
+        "row_number": 1,
+        "row_height": 300,
+        "col_start": 0,
+        "col_end": 6
+      },
+      "config": {
+        "vega_lite_spec": {
+          "mark": {
+            "type": "arc",
+            "innerRadius": 50
+          },
+          "encoding": {
+            "theta": {
+              "field": "store_count",
+              "type": "quantitative"
+            },
+            "color": {
+              "field": "encryption_status",
+              "type": "nominal",
+              "scale": {
+                "domain": [
+                  "Enabled",
+                  "Disabled"
+                ],
+                "range": [
+                  "#93c47d",
+                  "#ea9999"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "athena",
+        "query": "WITH data_asset_classes AS (SELECT * FROM production_tables.api_service_prod_public_data_assets CROSS JOIN UNNEST(CAST(JSON_PARSE(data_classes) AS ARRAY(JSON))) AS t(class_info) WHERE data_classes != '__debezium_unavailable_value') SELECT (CASE WHEN is_encrypted THEN 'Enabled' ELSE 'Disabled' END) encryption_status, COUNT(DISTINCT api_service_prod_public_data_stores.id) store_count FROM production_tables.api_service_prod_public_data_stores LEFT JOIN data_asset_classes ON api_service_prod_public_data_stores.organization_id = data_asset_classes.organization_id AND api_service_prod_public_data_stores.id = data_asset_classes.data_store_id LEFT JOIN production_tables.api_service_prod_public_classes ON data_asset_classes.organization_id = api_service_prod_public_classes.organization_id and (JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.id')) = api_service_prod_public_classes.id WHERE (api_service_prod_public_data_stores.name NOT LIKE '%sentra-input%' OR api_service_prod_public_data_stores.name IS NULL) AND api_service_prod_public_data_stores.sensitivity_level >= 2 AND api_service_prod_public_data_stores.sensitivity_level <= 3 AND api_service_prod_public_data_stores.organization_id = :organization_id AND (:connector_id IS NULL OR api_service_prod_public_data_stores.connector_id = :connector_id) AND (:categories IS NULL OR api_service_prod_public_classes.category IN (SELECT value FROM UNNEST(split(:categories, ',')) AS h(value))) GROUP BY 1 ORDER BY 2 DESC"
+      }
+    },
+    {
+      "section_id": "data_categories",
+      "name": "Data Categories",
+      "type": "graph",
+      "grid": {
+        "row_number": 1,
+        "row_height": 300,
+        "col_start": 6,
+        "col_end": 12
+      },
+      "config": {
+        "vega_lite_spec": {
+          "mark": {
+            "type": "bar",
+            "tooltip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "category",
+              "type": "nominal"
+            },
+            "y": {
+              "field": "asset_count",
+              "type": "quantitative"
+            }
+          }
+        }
+      },
+      "data_source": {
+        "type": "sql",
+        "connection_id": "athena",
+        "query": "WITH assets_alerts AS (SELECT * FROM production_tables.api_service_prod_public_alerts CROSS JOIN UNNEST(CAST(JSON_EXTRACT(content, '$.violated_asset_ids') AS ARRAY<VARCHAR>)) AS t(asset_id)), data_asset_classes AS (SELECT * FROM production_tables.api_service_prod_public_data_assets CROSS JOIN UNNEST(CAST(JSON_PARSE(data_classes) AS ARRAY(JSON))) AS t(class_info) WHERE data_classes != '__debezium_unavailable_value') SELECT api_service_prod_public_classes.category, COUNT(DISTINCT assets_alerts.asset_id) asset_count FROM assets_alerts INNER JOIN production_tables.api_service_prod_public_policies ON assets_alerts.organization_id = api_service_prod_public_policies.organization_id LEFT JOIN data_asset_classes ON assets_alerts.organization_id = data_asset_classes.organization_id AND assets_alerts.asset_id = data_asset_classes.id LEFT JOIN production_tables.api_service_prod_public_classes ON assets_alerts.organization_id = api_service_prod_public_classes.organization_id and (JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.id')) = api_service_prod_public_classes.id WHERE assets_alerts.entity_type = 'STORE' AND assets_alerts.status = 'opened' AND api_service_prod_public_classes.category IS NOT NULL AND assets_alerts.organization_id = :organization_id AND (:connector_id IS NULL OR assets_alerts.connector_id = :connector_id) AND (:frameworks IS NULL OR api_service_prod_public_policies.frameworks LIKE CONCAT('%', :frameworks, '%')) GROUP BY 1 ORDER BY 2 DESC"
+      }
+    },
+    {
       "section_id": "data_classification",
       "name": "Data Classification Overview",
       "type": "table",
       "grid": {
-        "row_number": 0,
+        "row_number": 2,
         "col_start": 0,
         "col_end": 12
       },
@@ -64,66 +142,10 @@
         "connection_id": "athena",
         "query": "WITH data_asset_classes AS (SELECT * FROM production_tables.api_service_prod_public_data_assets CROSS JOIN UNNEST(CAST(JSON_PARSE(data_classes) AS ARRAY(JSON))) t(class_info) WHERE data_classes != '__debezium_unavailable_value') SELECT api_service_prod_public_classes.name, api_service_prod_public_connectors.account_type, api_service_prod_public_data_stores.hosting_service, api_service_prod_public_data_stores.region, COUNT(DISTINCT api_service_prod_public_data_stores.name) data_store_count, COALESCE(SUM(CAST((CAST(JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.count') AS bigint)) AS DOUBLE)), 0) finding_count FROM production_tables.api_service_prod_public_data_stores INNER JOIN production_tables.api_service_prod_public_connectors ON api_service_prod_public_connectors.id=api_service_prod_public_data_stores.connector_id LEFT JOIN data_asset_classes ON api_service_prod_public_data_stores.organization_id = data_asset_classes.organization_id AND api_service_prod_public_data_stores.id = data_asset_classes.data_store_id LEFT JOIN production_tables.api_service_prod_public_classes ON data_asset_classes.organization_id = api_service_prod_public_classes.organization_id and (JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.id')) = api_service_prod_public_classes.id WHERE api_service_prod_public_data_stores.organization_id = :organization_id AND (:connector_id IS NULL OR api_service_prod_public_data_stores.connector_id = :connector_id) AND (:categories IS NULL OR api_service_prod_public_classes.category IN (SELECT value FROM UNNEST(split(:categories, ',')) h(value))) GROUP BY 1, 2, 3, 4 HAVING COALESCE(SUM(CAST((CAST(JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.count') AS bigint)) AS DOUBLE)), 0) > 0 ORDER BY 1"
       }
-    },
-    {
-      "section_id": "encryption_at_rest",
-      "name": "Encryption At Rest",
-      "type": "graph",
-      "grid": {
-        "row_number": 1,
-        "row_height": 300,
-        "col_start": 0,
-        "col_end": 6
-      },
-      "config": {
-        "vega_lite_spec": {
-          "mark": {"type": "arc", "innerRadius": 50},
-          "encoding": {
-            "theta": {"field": "store_count", "type": "quantitative"},
-            "color": {
-              "field": "encryption_status",
-              "type": "nominal",
-              "scale": {
-                "domain": ["Enabled", "Disabled"],
-                "range": ["#93c47d", "#ea9999"]
-              }
-            }
-          }
-        }
-      },
-      "data_source": {
-        "type": "sql",
-        "connection_id": "athena",
-        "query": "WITH data_asset_classes AS (SELECT * FROM production_tables.api_service_prod_public_data_assets CROSS JOIN UNNEST(CAST(JSON_PARSE(data_classes) AS ARRAY(JSON))) AS t(class_info) WHERE data_classes != '__debezium_unavailable_value') SELECT (CASE WHEN is_encrypted THEN 'Enabled' ELSE 'Disabled' END) encryption_status, COUNT(DISTINCT api_service_prod_public_data_stores.id) store_count FROM production_tables.api_service_prod_public_data_stores LEFT JOIN data_asset_classes ON api_service_prod_public_data_stores.organization_id = data_asset_classes.organization_id AND api_service_prod_public_data_stores.id = data_asset_classes.data_store_id LEFT JOIN production_tables.api_service_prod_public_classes ON data_asset_classes.organization_id = api_service_prod_public_classes.organization_id and (JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.id')) = api_service_prod_public_classes.id WHERE (api_service_prod_public_data_stores.name NOT LIKE '%sentra-input%' OR api_service_prod_public_data_stores.name IS NULL) AND api_service_prod_public_data_stores.sensitivity_level >= 2 AND api_service_prod_public_data_stores.sensitivity_level <= 3 AND api_service_prod_public_data_stores.organization_id = :organization_id AND (:connector_id IS NULL OR api_service_prod_public_data_stores.connector_id = :connector_id) AND (:categories IS NULL OR api_service_prod_public_classes.category IN (SELECT value FROM UNNEST(split(:categories, ',')) AS h(value))) GROUP BY 1 ORDER BY 2 DESC"
-      }
-    },
-    {
-      "section_id": "data_categories",
-      "name": "Data Categories",
-      "type": "graph",
-      "grid": {
-        "row_number": 1,
-        "row_height": 300,
-        "col_start": 6,
-        "col_end": 12
-      },
-      "config": {
-        "vega_lite_spec": {
-          "mark": {"type": "bar", "tooltip": true},
-          "encoding": {
-            "x": {"field": "category", "type": "nominal"},
-            "y": {"field": "asset_count", "type": "quantitative"}
-          }
-        }
-      },
-      "data_source": {
-        "type": "sql",
-        "connection_id": "athena",
-        "query": "WITH assets_alerts AS (SELECT * FROM production_tables.api_service_prod_public_alerts CROSS JOIN UNNEST(CAST(JSON_EXTRACT(content, '$.violated_asset_ids') AS ARRAY<VARCHAR>)) AS t(asset_id)), data_asset_classes AS (SELECT * FROM production_tables.api_service_prod_public_data_assets CROSS JOIN UNNEST(CAST(JSON_PARSE(data_classes) AS ARRAY(JSON))) AS t(class_info) WHERE data_classes != '__debezium_unavailable_value') SELECT api_service_prod_public_classes.category, COUNT(DISTINCT assets_alerts.asset_id) asset_count FROM assets_alerts INNER JOIN production_tables.api_service_prod_public_policies ON assets_alerts.organization_id = api_service_prod_public_policies.organization_id LEFT JOIN data_asset_classes ON assets_alerts.organization_id = data_asset_classes.organization_id AND assets_alerts.asset_id = data_asset_classes.id LEFT JOIN production_tables.api_service_prod_public_classes ON assets_alerts.organization_id = api_service_prod_public_classes.organization_id and (JSON_EXTRACT_SCALAR(data_asset_classes.class_info, '$.id')) = api_service_prod_public_classes.id WHERE assets_alerts.entity_type = 'STORE' AND assets_alerts.status = 'opened' AND api_service_prod_public_classes.category IS NOT NULL AND assets_alerts.organization_id = :organization_id AND (:connector_id IS NULL OR assets_alerts.connector_id = :connector_id) AND (:frameworks IS NULL OR api_service_prod_public_policies.frameworks LIKE CONCAT('%', :frameworks, '%')) GROUP BY 1 ORDER BY 2 DESC"
-      }
     }
   ],
   "orientation": "portrait",
   "paper_size": "a4",
-  "margin": 5
+  "margin": 5,
+  "logo_path": "assets/logo.png"
 }

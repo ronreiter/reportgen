@@ -37,7 +37,7 @@ tasks:
   compliance-report:
     desc: Generate the compliance report using Athena data
     cmds:
-      - AWS_PROFILE=prod task compliance-report -- -p "organization_id=52" -p "categories='Personal'" -p "frameworks='GDPR'"
+      - poetry run reportgen examples/compliance_report_config.json -o compliance_report.pdf -p "organization_id=52" -p "categories='Personal'" -p "frameworks='GDPR'"
       - open compliance_report.pdf
 
   serve-report:
