@@ -23,7 +23,7 @@
       "config": {
         "vega_lite_spec": {
           "autosize": {
-            "type": "fit"
+            "type": "fit-y"
           },
           "mark": {
             "type": "bar",
@@ -157,7 +157,6 @@
       "type": "table",
       "grid": {
         "row_number": 1,
-        "row_height": 400,
         "col_start": 0,
         "col_end": 12
       },
@@ -201,14 +200,14 @@
       "type": "graph",
       "grid": {
         "row_number": 2,
-        "row_height": 300,
+        "row_height": 250,
         "col_start": 0,
         "col_end": 12
       },
       "config": {
         "vega_lite_spec": {
           "autosize": {
-            "type": "fit"
+            "type": "fit-y"
           },
           "mark": {
             "type": "line",
@@ -269,7 +268,7 @@
       "data_source": {
         "type": "sql",
         "connection_id": "sales_db",
-        "query": "SELECT strftime('%Y-%m', date) as month, SUM(revenue) as sales FROM products GROUP BY month ORDER BY month"
+        "query": "SELECT month, sales FROM monthly_sales ORDER BY month"
       }
     }
   ],
