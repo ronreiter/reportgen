@@ -15,7 +15,11 @@ from .models import ReportConfig, ReportData, SectionConfig, DataSource
 class Report:
     config: ReportConfig
 
-    def __init__(self, config: Union[str, Path, ReportConfig]):
+    def __init__(
+        self,
+        config: Union[str, Path, ReportConfig],
+        parameters: Optional[Dict[str, Any]] = None,
+    ):
         if isinstance(config, (str, Path)):
             with open(config) as f:
                 config = ReportConfig.model_validate(json.load(f))
@@ -23,6 +27,10 @@ class Report:
             config = ReportConfig.model_validate(config)
 
         self.config = config
+        # Override config parameters with provided parameters
+        if parameters:
+            self.config.parameters = {**(self.config.parameters or {}), **parameters}
+
         # Set up Jinja2 environment
         templates_dir = Path(__file__).parent / "templates"
         self.jinja_env = Environment(loader=FileSystemLoader(templates_dir))

@@ -31,13 +31,13 @@ tasks:
     desc: Generate the sales report example using SQL data
     deps: [create-db]
     cmds:
-      - poetry run reportgen examples/sales_report_sql_config.json -o sales_report_sql.pdf
+      - poetry run reportgen examples/sales_report_sql_config.json -o sales_report_sql.pdf {{.CLI_ARGS}}
       - open sales_report_sql.pdf
 
   compliance-report:
     desc: Generate the compliance report using Athena data
     cmds:
-      - poetry run reportgen examples/compliance_report_config.json -o compliance_report.pdf
+      - AWS_PROFILE=prod task compliance-report -- -p "organization_id=52" -p "categories='Personal'" -p "frameworks='GDPR'"
       - open compliance_report.pdf
 
   serve-report:
