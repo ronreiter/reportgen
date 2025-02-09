@@ -19,6 +19,7 @@ aiosqlite = "^0.19.0"
 python-dateutil = "^2.9.0.post0"
 uvicorn = "^0.34.0"
 fastapi = "^0.115.8"
+pyathena = {extras = ["sqlalchemy"], version = "^3.12.2"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"

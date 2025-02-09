@@ -3,7 +3,8 @@
   "connections": {
     "sales_db": {
       "connection_string": "sqlite+aiosqlite:///examples/sales.sqlite3",
-      "type": "sqlite"
+      "type": "sqlite",
+      "async_enabled": true
     }
   },
   "parameters": {
@@ -74,7 +75,7 @@
       "data_source": {
         "type": "sql",
         "connection_id": "sales_db",
-        "query": "SELECT category, SUM(revenue) as total_sales FROM products GROUP BY category ORDER BY total_sales DESC"
+        "query": "SELECT category, SUM(revenue) total_sales FROM products GROUP BY category ORDER BY total_sales DESC"
       }
     },
     {
@@ -162,35 +163,34 @@
       "config": {
         "columns": [
           {
-            "name": "Product",
+            "name": "name",
+            "title": "Product",
             "type": "string"
           },
           {
-            "name": "Category",
+            "name": "category",
+            "title": "Category",
             "type": "string"
           },
           {
-            "name": "Units Sold",
+            "name": "units_sold",
+            "title": "Units Sold",
             "type": "number",
-            "format": "0,0",
-            "parse": "int"
+            "format": "0,0"
           },
           {
-            "name": "Revenue",
+            "name": "revenue",
+            "title": "Revenue",
             "type": "number",
-            "format": "$0,0.00",
-            "parse": "float"
+            "format": "$0,0.00"
           }
         ],
-        "max_results": 10,
-        "data": {
-          "sql": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 10"
-        }
+        "max_results": 10
       },
       "data_source": {
         "type": "sql",
         "connection_id": "sales_db",
-        "query": "SELECT name as Product, category as Category, units_sold as 'Units Sold', revenue as Revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 10"
+        "query": "SELECT name, category, units_sold, revenue FROM products GROUP BY name, category ORDER BY revenue DESC LIMIT 10"
       }
     },
     {
@@ -233,9 +233,7 @@
               "type": "temporal",
               "title": "Month",
               "axis": {
-                "labelAngle": 45,
-                "labelOverlap": true,
-                "format": "%B %Y"
+                "format": "%b %Y"
               }
             },
             "y": {

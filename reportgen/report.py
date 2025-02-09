@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional, Union, List, Dict, Any
 import json
 from pathlib import Path
@@ -5,8 +6,8 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML, CSS
 from jinja2 import Environment, FileSystemLoader
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy import text
 import base64
 from .models import ReportConfig, ReportData, SectionConfig, DataSource
 
@@ -27,22 +28,37 @@ class Report:
         self.jinja_env = Environment(loader=FileSystemLoader(templates_dir))
 
     async def _fetch_sql_data(self, data_source: DataSource) -> Dict[str, Any]:
-        """Fetch data from SQL database"""
+        """Fetch data from SQL database using either sync or async connection based on config"""
         if data_source.connection_id not in self.config.connections:
             raise ValueError(
                 f"Connection ID '{data_source.connection_id}' not found in connections"
             )
 
         connection_config = self.config.connections[data_source.connection_id]
-        engine = create_async_engine(connection_config.connection_string)
 
-        async with engine.connect() as conn:
-            query = text(data_source.query)
-            # Use global parameters if available
-            parameters = self.config.parameters or {}
-            result = await conn.execute(query, parameters)
-            rows = result.mappings().all()
-            return [dict(row) for row in rows]
+        # Use async connection if enabled
+        if connection_config.async_enabled:
+            engine = create_async_engine(connection_config.connection_string)
+            async with engine.connect() as conn:
+                query = text(data_source.query)
+                parameters = self.config.parameters or {}
+                result = await conn.execute(query, parameters)
+                rows = result.mappings().all()
+                return [dict(row) for row in rows]
+        else:
+            # Use sync connection
+            engine = create_engine(connection_config.connection_string)
+
+            def run_sync_query():
+                with engine.connect() as conn:
+                    query = text(data_source.query)
+                    parameters = self.config.parameters or {}
+                    result = conn.execute(query, parameters)
+                    rows = result.mappings().all()
+                    return [dict(row) for row in rows]
+
+            # Run sync query in thread pool
+            return await asyncio.to_thread(run_sync_query)
 
     async def _get_section_data(
         self, section: SectionConfig, data: Optional[ReportData] = None
@@ -136,7 +152,16 @@ class Report:
                         return f'<td class="{css_class}">{formatted_value}</td>'
 
                     # Generate custom HTML with proper formatting
-                    headers = [f"<th>{col}</th>" for col in df.columns]
+                    col_titles = {x.name: x.title for x in section.config.columns}
+                    headers = []
+                    for col in df.columns:
+                        if col not in col_titles:
+                            col_name = col
+                        else:
+                            col_name = col_titles[col]
+
+                        headers.append(f"<th>{col_name}</th>")
+
                     header_row = f"<tr>{''.join(headers)}</tr>"
 
                     rows = []
