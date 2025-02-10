@@ -131,9 +131,9 @@ class Report:
 
                 elif section.type == "table":
                     # Create DataFrame and generate table HTML
-                    df = pd.DataFrame(section_data)
-                    if len(df) > section.config.max_results:
-                        df = df.head(section.config.max_results)
+                    df = pd.DataFrame(section_data * 10)
+                    # if len(df) > section.config.max_results:
+                    #     df = df.head(section.config.max_results)
 
                     # Format the columns based on configuration
                     formatters = {}
@@ -185,7 +185,7 @@ class Report:
                     """
 
                     section_html = f"""
-                    <div class="section table" style="{section_style}">
+                    <div class="table" style="{section_style}">
                         {f'<h3>{section.name}</h3>' if section.name else ''}
                         {table_html}
                     </div>
@@ -195,7 +195,12 @@ class Report:
 
                 row_html.append(section_html)
 
-            sections_html.append("".join(row_html))
+            if len(row_sections) > 1:
+                sections_html.append(
+                    f'<div class="report-row">{"".join(row_html)}</div>'
+                )
+            else:
+                sections_html.append("".join(row_html))
 
         return sections_html
 

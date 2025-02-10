@@ -5,7 +5,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Slab:wght@400;500&display=swap" rel="stylesheet">
     <style>
         @page {
-            margin: 50px 0 40px 0;
+            margin: 60px 0 40px 0;
             @top-left {
                 content: element(header);
             }
@@ -38,6 +38,8 @@
         }
         .logo img {
             height: 20px;
+            margin-top: 20px;
+            margin-bottom: 10px;
         }
         .report-title {
             font-family: 'Roboto Slab', serif;
@@ -45,10 +47,14 @@
             margin-bottom: 20px;
         }
         .report-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            display: block;
             padding: 20px;
+        }
+        .report-grid > div {
+            margin-bottom: 20px;
+        }
+        .report-full-row {
+            display: block;
         }
         .report-row {
             display: grid;
@@ -65,6 +71,11 @@
             flex-direction: column;
             align-items: stretch;
             width: 100%;
+        }
+        .table {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
         }
         .section h3 {
             margin-top: 0;
@@ -130,9 +141,7 @@
       {% endif %}
 
     {% for row_html in sections_html %}
-        <div class="report-row">
-            {{ row_html|safe }}
-        </div>
+        {{ row_html|safe }}
     {% endfor %}
     </div>
 </body>
